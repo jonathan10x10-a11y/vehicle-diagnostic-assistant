@@ -102,4 +102,4 @@ The system includes mock data for demonstration purposes.
 Educational Use - College Project
 
 ## Contributors
-[Your Name] - [Roll Number]
+Jonathan Joseph
