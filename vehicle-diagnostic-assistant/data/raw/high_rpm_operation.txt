@@ -1,0 +1,25 @@
+High RPM Operation and Engine Protection
+
+Modern engines have a redline typically between 6000-7000 RPM. The redline represents the maximum safe engine speed before mechanical damage can occur.
+
+Risks of Excessive RPM:
+- Increased wear on pistons and bearings
+- Valve float causing loss of control
+- Connecting rod failure at extreme speeds
+- Excessive oil consumption
+- Reduced engine lifespan
+
+Safe Operating Guidelines:
+Most efficient operation occurs between 2000-4000 RPM for highway cruising. Sport driving should keep RPM below 5500 RPM unless on a track.
+
+RPM Warning Zones:
+- 0-2000 RPM: Economy range, best fuel efficiency
+- 2000-4000 RPM: Normal driving range
+- 4000-5500 RPM: Spirited driving, occasional use acceptable
+- 5500-6500 RPM: High stress zone, avoid sustained operation
+- Above 6500 RPM: Danger zone, immediate damage risk
+
+Engine Protection Systems:
+Most modern vehicles have rev limiters that cut fuel or spark when approaching redline. However, these are emergency systems and should not be relied upon regularly.
+
+If you accidentally over-rev the engine, monitor for unusual noises, vibrations, or oil consumption in following days.

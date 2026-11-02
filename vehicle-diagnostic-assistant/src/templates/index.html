@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Diagnostic Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🚗 AI Vehicle Diagnostic Assistant</h1>
+                <p class="subtitle">Real-time diagnostics powered by RAG & OBD-II</p>
+            </div>
+            <div class="status-indicator">
+                <span id="system-status" class="status-badge">🔄 Loading...</span>
+            </div>
+        </header>
+
+        <!-- Vehicle Status Dashboard -->
+        <div class="dashboard">
+            <h2>📊 Live Vehicle Status</h2>
+            <div class="sensor-grid">
+                <div class="sensor-card">
+                    <div class="sensor-label">RPM</div>
+                    <div class="sensor-value" id="rpm-value">---</div>
+                    <div class="sensor-unit">rpm</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Speed</div>
+                    <div class="sensor-value" id="speed-value">---</div>
+                    <div class="sensor-unit">km/h</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Coolant Temp</div>
+                    <div class="sensor-value" id="temp-value">---</div>
+                    <div class="sensor-unit">°C</div>
+                </div>
+                <div class="sensor-card">
+                    <div class="sensor-label">Engine Load</div>
+                    <div class="sensor-value" id="load-value">---</div>
+                    <div class="sensor-unit">%</div>
+                </div>
+            </div>
+
+            <!-- DTC Codes Display -->
+            <div id="dtc-container" class="dtc-container" style="display: none;">
+                <h3>⚠️ Diagnostic Trouble Codes</h3>
+                <div id="dtc-list"></div>
+            </div>
+
+            <!-- Safety Alerts -->
+            <div id="alerts-container" class="alerts-container" style="display: none;">
+                <h3>🚨 Safety Alerts</h3>
+                <div id="alerts-list"></div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-container">
+            <h2>💬 Ask a Question</h2>
+            
+            <!-- Chat Messages -->
+            <div id="chat-messages" class="chat-messages">
+                <div class="message bot-message">
+                    <div class="message-content">
+                        <strong>👋 Hello!</strong> I'm your AI diagnostic assistant. I can help you understand your vehicle's condition based on live sensor data and diagnostic codes.
+                        <br><br>
+                        Try asking:
+                        <ul>
+                            <li>"Why is my temperature reading high?"</li>
+                            <li>"What does error code P0301 mean?"</li>
+                            <li>"Is it safe to continue driving?"</li>
+                            <li>"What should I check first?"</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-input-container">
+                <textarea 
+                    id="user-input" 
+                    placeholder="Type your question here (e.g., 'Why is my engine temperature high?')"
+                    rows="2"
+                ></textarea>
+                <button id="send-button" onclick="sendMessage()">
+                    Send 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize system
+        let vehicleData = null;
+        let dtcCodes = [];
+        let safetyReport = null;
+
+        // Load vehicle status on page load
+        window.onload = function() {
+            loadVehicleStatus();
+            // Refresh vehicle data every 5 seconds
+            setInterval(loadVehicleStatus, 5000);
+            
+            // Enable Enter key to send message
+            document.getElementById('user-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+        };
+
+        // Load vehicle status from backend
+        function loadVehicleStatus() {
+            fetch('/api/vehicle-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        vehicleData = data.vehicle_data;
+                        dtcCodes = data.dtc_codes;
+                        safetyReport = data.safety_report;
+                        
+                        updateDashboard();
+                        updateSystemStatus();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading vehicle status:', error);
+                    document.getElementById('system-status').textContent = '❌ Error';
+                    document.getElementById('system-status').className = 'status-badge status-error';
+                });
+        }
+
+        // Update dashboard with vehicle data
+        function updateDashboard() {
+            // Update sensor values
+            document.getElementById('rpm-value').textContent = 
+                vehicleData.rpm !== null ? Math.round(vehicleData.rpm) : '---';
+            document.getElementById('speed-value').textContent = 
+                vehicleData.speed !== null ? Math.round(vehicleData.speed) : '---';
+            document.getElementById('temp-value').textContent = 
+                vehicleData.coolant_temp !== null ? Math.round(vehicleData.coolant_temp) : '---';
+            document.getElementById('load-value').textContent = 
+                vehicleData.engine_load !== null ? Math.round(vehicleData.engine_load) : '---';
+
+            // Update DTC codes
+            const dtcContainer = document.getElementById('dtc-container');
+            const dtcList = document.getElementById('dtc-list');
+            
+            if (dtcCodes && dtcCodes.length > 0) {
+                dtcContainer.style.display = 'block';
+                dtcList.innerHTML = dtcCodes.map(dtc => 
+                    `<div class="dtc-item">
+                        <span class="dtc-code">${dtc.code}</span>
+                        <span class="dtc-desc">${dtc.description}</span>
+                    </div>`
+                ).join('');
+            } else {
+                dtcContainer.style.display = 'none';
+            }
+
+            // Update safety alerts
+            const alertsContainer = document.getElementById('alerts-container');
+            const alertsList = document.getElementById('alerts-list');
+            
+            if (safetyReport && safetyReport.alerts && safetyReport.alerts.length > 0) {
+                alertsContainer.style.display = 'block';
+                alertsList.innerHTML = safetyReport.alerts.map(alert => 
+                    `<div class="alert-item ${getSeverityClass(safetyReport.severity)}">
+                        ${alert}
+                    </div>`
+                ).join('');
+            } else {
+                alertsContainer.style.display = 'none';
+            }
+        }
+
+        // Update system status indicator
+        function updateSystemStatus() {
+            const statusBadge = document.getElementById('system-status');
+            
+            if (safetyReport) {
+                const severity = safetyReport.severity;
+                let emoji, text, className;
+                
+                switch(severity) {
+                    case 'NORMAL':
+                        emoji = '✅';
+                        text = 'All Systems Normal';
+                        className = 'status-badge status-normal';
+                        break;
+                    case 'WARNING':
+                        emoji = '⚠️';
+                        text = 'Warning';
+                        className = 'status-badge status-warning';
+                        break;
+                    case 'CRITICAL':
+                        emoji = '🔴';
+                        text = 'Critical';
+                        className = 'status-badge status-critical';
+                        break;
+                    case 'IMMEDIATE':
+                        emoji = '🚨';
+                        text = 'Immediate Action Required';
+                        className = 'status-badge status-immediate';
+                        break;
+                    default:
+                        emoji = '🔄';
+                        text = 'Connected';
+                        className = 'status-badge';
+                }
+                
+                statusBadge.textContent = `${emoji} ${text}`;
+                statusBadge.className = className;
+            }
+        }
+
+        // Send message to backend
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            // Disable input while processing
+            input.disabled = true;
+            document.getElementById('send-button').disabled = true;
+            
+            // Add user message to chat
+            addMessage('user', query);
+            
+            // Clear input
+            input.value = '';
+            
+            // Show loading message
+            const loadingId = addMessage('bot', '🔄 Analyzing vehicle data and searching knowledge base...');
+            
+            // Send request to backend
+            fetch('/api/diagnose', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove loading message
+                removeMessage(loadingId);
+                
+                if (data.success) {
+                    displayDiagnosticResult(data);
+                } else {
+                    addMessage('bot', `❌ Error: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                removeMessage(loadingId);
+                addMessage('bot', `❌ Error: ${error.message}`);
+            })
+            .finally(() => {
+                // Re-enable input
+                input.disabled = false;
+                document.getElementById('send-button').disabled = false;
+                input.focus();
+            });
+        }
+
+        // Display diagnostic result
+        function displayDiagnosticResult(data) {
+            const explanation = data.explanation;
+            
+            let message = '<div class="diagnostic-result">';
+            
+            // Severity badge
+            const severityEmoji = {
+                'NORMAL': '✅',
+                'WARNING': '⚠️',
+                'CRITICAL': '🔴',
+                'IMMEDIATE': '🚨',
+                'UNKNOWN': '❓'
+            };
+            
+            message += `<div class="severity-badge ${getSeverityClass(explanation.severity)}">`;
+            message += `${severityEmoji[explanation.severity] || '❓'} ${explanation.severity}`;
+            message += `</div>`;
+            
+            // Explanation
+            message += `<div class="explanation">`;
+            message += `<h4>📝 Explanation:</h4>`;
+            message += `<p>${explanation.explanation}</p>`;
+            message += `</div>`;
+            
+            // Checklist
+            if (explanation.checklist && explanation.checklist.length > 0) {
+                message += `<div class="checklist">`;
+                message += `<h4>🔧 Inspection Checklist:</h4>`;
+                message += `<ol>`;
+                explanation.checklist.forEach(item => {
+                    message += `<li>${item}</li>`;
+                });
+                message += `</ol>`;
+                message += `</div>`;
+            }
+            
+            // Urgency
+            if (explanation.estimated_urgency) {
+                message += `<div class="urgency">`;
+                message += `<strong>⏰ Timeframe:</strong> ${explanation.estimated_urgency}`;
+                message += `</div>`;
+            }
+            
+            // Sources
+            if (data.retrieved_sources && data.retrieved_sources.length > 0) {
+                message += `<div class="sources">`;
+                message += `<h4>📚 Sources Referenced:</h4>`;
+                message += `<ul>`;
+                data.retrieved_sources.forEach(source => {
+                    message += `<li>${source.source} (${Math.round(source.relevance * 100)}% relevant)</li>`;
+                });
+                message += `</ul>`;
+                message += `</div>`;
+            }
+            
+            message += '</div>';
+            
+            addMessage('bot', message);
+        }
+
+        // Add message to chat
+        let messageIdCounter = 0;
+        function addMessage(sender, content) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageId = `msg-${messageIdCounter++}`;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.id = messageId;
+            messageDiv.className = `message ${sender}-message`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            return messageId;
+        }
+
+        // Remove message from chat
+        function removeMessage(messageId) {
+            const message = document.getElementById(messageId);
+            if (message) {
+                message.remove();
+            }
+        }
+
+        // Get CSS class for severity level
+        function getSeverityClass(severity) {
+            const classes = {
+                'NORMAL': 'severity-normal',
+                'WARNING': 'severity-warning',
+                'CRITICAL': 'severity-critical',
+                'IMMEDIATE': 'severity-immediate'
+            };
+            return classes[severity] || '';
+        }
+    </script>
+</body>
+</html>

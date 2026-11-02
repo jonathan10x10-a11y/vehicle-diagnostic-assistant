@@ -1,0 +1,22 @@
+Engine Overheating - Causes and Solutions
+
+Engine overheating is a serious condition that requires immediate attention. The cooling system is designed to maintain optimal engine temperature between 85-95°C under normal operating conditions.
+
+Common Causes of Overheating:
+1. Low coolant level - Check coolant reservoir and refill if needed
+2. Faulty thermostat - May stick closed preventing coolant circulation
+3. Damaged water pump - Reduces coolant flow through engine
+4. Blocked radiator - Debris or corrosion restricts airflow
+5. Broken cooling fan - Fan should activate when temperature rises
+
+Warning Signs:
+- Temperature gauge reading above normal range
+- Steam coming from under hood
+- Sweet smell (coolant leak)
+- Loss of engine power
+
+Immediate Actions:
+If temperature exceeds 120°C, pull over immediately and turn off engine. Continuing to drive can cause catastrophic engine damage including warped cylinder head or blown head gasket. Allow engine to cool for at least 30 minutes before checking coolant level.
+
+Prevention:
+Regular maintenance including coolant flushes every 30,000 km and inspection of hoses and clamps can prevent most overheating issues.

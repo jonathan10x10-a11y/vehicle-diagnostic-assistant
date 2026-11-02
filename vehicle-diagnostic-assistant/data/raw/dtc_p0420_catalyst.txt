@@ -1,0 +1,27 @@
+DTC P0420 - Catalyst System Efficiency Below Threshold
+
+Code P0420 indicates the catalytic converter is not operating at optimal efficiency. The catalyst converts harmful emissions (CO, HC, NOx) into less harmful substances (CO2, H2O, N2).
+
+What This Code Means:
+The oxygen sensors before and after the catalytic converter should show different readings. When readings are too similar, it suggests the catalyst is not effectively cleaning emissions.
+
+Possible Causes:
+1. Worn out catalytic converter (most common in high-mileage vehicles)
+2. Faulty oxygen sensors giving incorrect readings
+3. Engine running too rich or too lean
+4. Exhaust leaks before catalytic converter
+5. Use of wrong engine oil or fuel additives
+
+Immediate Concerns:
+This code typically does NOT require immediate action. You can continue driving, but the vehicle will not pass emissions testing.
+
+Severity: WARNING - Schedule service within 1-2 weeks
+
+Diagnosis Steps:
+1. Check oxygen sensor readings with scan tool
+2. Inspect for exhaust leaks
+3. Review fuel trim data
+4. Consider catalyst replacement if vehicle has high mileage (>100,000 km)
+
+Cost Considerations:
+Catalytic converter replacement can be expensive ($500-2000) so proper diagnosis is essential to avoid unnecessary repairs.

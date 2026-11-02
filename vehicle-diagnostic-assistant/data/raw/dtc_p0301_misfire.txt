@@ -1,0 +1,29 @@
+Diagnostic Trouble Code P0301 - Cylinder 1 Misfire Detected
+
+DTC P0301 indicates that the engine control module (ECM) has detected a misfire in cylinder number 1. A misfire occurs when combustion in the cylinder is incomplete or absent.
+
+Symptoms:
+- Rough idle and engine vibration
+- Loss of power and acceleration
+- Increased fuel consumption
+- Check engine light illuminated
+- Possible engine damage if left unaddressed
+
+Common Causes:
+1. Faulty spark plug or ignition coil
+2. Fuel injector malfunction
+3. Low compression in cylinder
+4. Vacuum leaks affecting air-fuel mixture
+5. Damaged spark plug wire
+
+Diagnostic Steps:
+1. Scan for additional codes
+2. Inspect spark plugs for wear or fouling
+3. Check ignition coil resistance
+4. Test fuel injector operation
+5. Perform compression test
+
+Severity: CRITICAL - Service required within 1-2 days to prevent catalytic converter damage. Do not ignore this code as continued driving with misfire can cause expensive repairs.
+
+Repair Typically Involves:
+Replacing spark plugs, ignition coils, or fuel injectors. Average repair cost ranges from $100-500 depending on component.

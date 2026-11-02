@@ -1,0 +1,62 @@
+[
+  {
+    "text": "Diagnostic Trouble Code P0301 - Cylinder 1 Misfire Detected\n\nDTC P0301 indicates that the engine control module (ECM) has detected a misfire in cylinder number 1. A misfire occurs when combustion in the cylinder is incomplete or absent.\n\nSymptoms:\n- Rough idle and engine vibration\n- Loss of power and acceleration\n- Increased fuel consumption\n- Check engine light illuminated\n- Possible engine damage if left unaddressed",
+    "source": "dtc_p0301_misfire.txt",
+    "chunk_id": 0
+  },
+  {
+    "text": "Common Causes:\n1. Faulty spark plug or ignition coil\n2. Fuel injector malfunction\n3. Low compression in cylinder\n4. Vacuum leaks affecting air-fuel mixture\n5. Damaged spark plug wire\n\nDiagnostic Steps:\n1. Scan for additional codes\n2. Inspect spark plugs for wear or fouling\n3. Check ignition coil resistance\n4. Test fuel injector operation\n5. Perform compression test",
+    "source": "dtc_p0301_misfire.txt",
+    "chunk_id": 1
+  },
+  {
+    "text": "Severity: CRITICAL - Service required within 1-2 days to prevent catalytic converter damage. Do not ignore this code as continued driving with misfire can cause expensive repairs.\n\nRepair Typically Involves:\nReplacing spark plugs, ignition coils, or fuel injectors. Average repair cost ranges from $100-500 depending on component.",
+    "source": "dtc_p0301_misfire.txt",
+    "chunk_id": 2
+  },
+  {
+    "text": "DTC P0420 - Catalyst System Efficiency Below Threshold\n\nCode P0420 indicates the catalytic converter is not operating at optimal efficiency. The catalyst converts harmful emissions (CO, HC, NOx) into less harmful substances (CO2, H2O, N2).\n\nWhat This Code Means:\nThe oxygen sensors before and after the catalytic converter should show different readings. When readings are too similar, it suggests the catalyst is not effectively cleaning emissions.",
+    "source": "dtc_p0420_catalyst.txt",
+    "chunk_id": 0
+  },
+  {
+    "text": "Possible Causes:\n1. Worn out catalytic converter (most common in high-mileage vehicles)\n2. Faulty oxygen sensors giving incorrect readings\n3. Engine running too rich or too lean\n4. Exhaust leaks before catalytic converter\n5. Use of wrong engine oil or fuel additives\n\nImmediate Concerns:\nThis code typically does NOT require immediate action. You can continue driving, but the vehicle will not pass emissions testing.\n\nSeverity: WARNING - Schedule service within 1-2 weeks",
+    "source": "dtc_p0420_catalyst.txt",
+    "chunk_id": 1
+  },
+  {
+    "text": "Diagnosis Steps:\n1. Check oxygen sensor readings with scan tool\n2. Inspect for exhaust leaks\n3. Review fuel trim data\n4. Consider catalyst replacement if vehicle has high mileage (>100,000 km)\n\nCost Considerations:\nCatalytic converter replacement can be expensive ($500-2000) so proper diagnosis is essential to avoid unnecessary repairs.",
+    "source": "dtc_p0420_catalyst.txt",
+    "chunk_id": 2
+  },
+  {
+    "text": "Engine Overheating - Causes and Solutions\n\nEngine overheating is a serious condition that requires immediate attention. The cooling system is designed to maintain optimal engine temperature between 85-95C under normal operating conditions.",
+    "source": "engine_overheating.txt",
+    "chunk_id": 0
+  },
+  {
+    "text": "Common Causes of Overheating:\n1. Low coolant level - Check coolant reservoir and refill if needed\n2. Faulty thermostat - May stick closed preventing coolant circulation\n3. Damaged water pump - Reduces coolant flow through engine\n4. Blocked radiator - Debris or corrosion restricts airflow\n5. Broken cooling fan - Fan should activate when temperature rises\n\nWarning Signs:\n- Temperature gauge reading above normal range\n- Steam coming from under hood\n- Sweet smell (coolant leak)\n- Loss of engine power",
+    "source": "engine_overheating.txt",
+    "chunk_id": 1
+  },
+  {
+    "text": "Immediate Actions:\nIf temperature exceeds 120C, pull over immediately and turn off engine. Continuing to drive can cause catastrophic engine damage including warped cylinder head or blown head gasket. Allow engine to cool for at least 30 minutes before checking coolant level.\n\nPrevention:\nRegular maintenance including coolant flushes every 30,000 km and inspection of hoses and clamps can prevent most overheating issues.",
+    "source": "engine_overheating.txt",
+    "chunk_id": 2
+  },
+  {
+    "text": "High RPM Operation and Engine Protection\n\nModern engines have a redline typically between 6000-7000 RPM. The redline represents the maximum safe engine speed before mechanical damage can occur.\n\nRisks of Excessive RPM:\n- Increased wear on pistons and bearings\n- Valve float causing loss of control\n- Connecting rod failure at extreme speeds\n- Excessive oil consumption\n- Reduced engine lifespan",
+    "source": "high_rpm_operation.txt",
+    "chunk_id": 0
+  },
+  {
+    "text": "Safe Operating Guidelines:\nMost efficient operation occurs between 2000-4000 RPM for highway cruising. Sport driving should keep RPM below 5500 RPM unless on a track.\n\nRPM Warning Zones:\n- 0-2000 RPM: Economy range, best fuel efficiency\n- 2000-4000 RPM: Normal driving range\n- 4000-5500 RPM: Spirited driving, occasional use acceptable\n- 5500-6500 RPM: High stress zone, avoid sustained operation\n- Above 6500 RPM: Danger zone, immediate damage risk",
+    "source": "high_rpm_operation.txt",
+    "chunk_id": 1
+  },
+  {
+    "text": "Engine Protection Systems:\nMost modern vehicles have rev limiters that cut fuel or spark when approaching redline. However, these are emergency systems and should not be relied upon regularly.\n\nIf you accidentally over-rev the engine, monitor for unusual noises, vibrations, or oil consumption in following days.",
+    "source": "high_rpm_operation.txt",
+    "chunk_id": 2
+  }
+]

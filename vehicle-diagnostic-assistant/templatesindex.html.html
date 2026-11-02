@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehicle Diagnostic Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">
+      <h1>Vehicle Diagnostic Assistant</h1>
+      <p>Live engine readings, fault codes, and answers grounded in your knowledge base.</p>
+    </div>
+    <div class="badges" aria-label="System status">
+      <span id="badge-obd" class="badge">Vehicle data: checking</span>
+      <span id="badge-llm" class="badge">AI answers: checking</span>
+      <span id="badge-kb" class="badge">Knowledge base: checking</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="cluster" aria-label="Vehicle status">
+      <div id="banner" class="banner sev-unknown" role="status">
+        <p id="banner-title" class="banner-title">Waiting for vehicle data</p>
+        <div id="banner-details" class="banner-details"></div>
+      </div>
+
+      <div class="block">
+        <h2>Live readings</h2>
+        <div id="gauges" class="gauges"></div>
+      </div>
+
+      <div class="block">
+        <h2>Fault codes</h2>
+        <ul id="codes" class="codes"></ul>
+        <p id="codes-empty" class="empty">No fault codes stored.</p>
+      </div>
+
+      <div id="other-wrap" class="block" hidden>
+        <h2>Other readings</h2>
+        <dl id="other" class="other"></dl>
+      </div>
+
+      <div class="refresh">
+        <span id="updated" class="updated">Not updated yet</span>
+        <button id="refresh-btn" type="button" class="ghost">Refresh now</button>
+      </div>
+    </aside>
+
+    <section class="chat" aria-label="Ask about your vehicle">
+      <h2>Ask about your vehicle</h2>
+      <div id="messages" class="messages" role="log" aria-live="polite"></div>
+
+      <div id="chips" class="chips">
+        <button type="button" class="chip">Why is my engine temperature high?</button>
+        <button type="button" class="chip">What does P0301 mean?</button>
+        <button type="button" class="chip">Is it safe to continue driving?</button>
+        <button type="button" class="chip">What should I check first?</button>
+      </div>
+
+      <form id="composer" class="composer" autocomplete="off">
+        <label for="query" class="visually-hidden">Your question</label>
+        <input id="query" type="text" placeholder="Describe the problem or ask about a fault code" maxlength="500" required>
+        <button id="send-btn" type="submit">Send question</button>
+      </form>
+    </section>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    var METRICS = [
+      { key: 'rpm', label: 'Engine speed', unit: 'rpm', min: 0, max: 7000, warn: 5000, crit: 6000 },
+      { key: 'speed', label: 'Vehicle speed', unit: 'km/h', min: 0, max: 200, warn: 160, crit: 180 },
+      { key: 'coolant_temp', label: 'Coolant temperature', unit: '\u00B0C', min: 40, max: 130, warn: 100, crit: 120 },
+      { key: 'engine_load', label: 'Engine load', unit: '%', min: 0, max: 100, warn: 85, crit: 95 }
+    ];
+
+    var SEVERITIES = ['normal', 'warning', 'critical', 'immediate'];
+    var SEV_TEXT = {
+      normal: 'All systems normal',
+      warning: 'Warning',
+      critical: 'Critical problem',
+      immediate: 'Stop the vehicle now',
+      unknown: 'Status unknown'
+    };
+
+    function make(tag, cls, text) {
+      var e = document.createElement(tag);
+      if (cls) e.className = cls;
+      if (text !== undefined && text !== null) e.textContent = text;
+      return e;
+    }
+
+    function sevKey(s) {
+      var k = String(s || '').toLowerCase();
+      return SEVERITIES.indexOf(k) >= 0 ? k : 'unknown';
+    }
+
+    function textOf(x) {
+      if (x === null || x === undefined) return '';
+      if (typeof x === 'string') return x;
+      if (typeof x === 'object') {
+        var direct = x.message || x.alert || x.description || x.text || x.action;
+        if (typeof direct === 'string') return direct;
+        return Object.keys(x).map(function (k) { return x[k]; })
+          .filter(function (v) { return typeof v === 'string'; }).join(' - ');
+      }
+      return String(x);
+    }
+
+    function pretty(key) {
+      var s = key.replace(/_/g, ' ');
+      return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    function formatNumber(v) {
+      if (typeof v === 'number') return Number.isInteger(v) ? String(v) : v.toFixed(1);
+      return String(v);
+    }
+
+    function levelFor(m, v) {
+      if (v >= m.crit) return 'critical';
+      if (v >= m.warn) return 'warning';
+      return 'normal';
+    }
+
+    function percent(r) {
+      if (typeof r !== 'number') return '';
+      var v = r <= 1 ? r * 100 : r;
+      return Math.round(v) + '% match';
+    }
+
+    /* ---------- Dashboard ---------- */
+    function renderBanner(report) {
+      var key = sevKey(report.severity);
+      $('banner').className = 'banner sev-' + key;
+      $('banner-title').textContent = SEV_TEXT[key];
+      var box = $('banner-details');
+      box.replaceChildren();
+      Object.keys(report).forEach(function (k) {
+        var v = report[k];
+        if (!Array.isArray(v) || v.length === 0) return;
+        box.appendChild(make('h3', null, pretty(k)));
+        var ul = make('ul');
+        v.forEach(function (item) { ul.appendChild(make('li', null, textOf(item))); });
+        box.appendChild(ul);
+      });
+    }
+
+    function renderGauges(v) {
+      var wrap = $('gauges');
+      wrap.replaceChildren();
+      METRICS.forEach(function (m) {
+        var raw = v[m.key];
+        var has = typeof raw === 'number';
+        var row = make('div', 'gauge');
+        var head = make('div', 'gauge-head');
+        head.appendChild(make('span', 'gauge-label', m.label));
+        var val = make('span', 'gauge-value');
+        val.appendChild(document.createTextNode(has ? formatNumber(raw) : '-'));
+        val.appendChild(make('span', 'gauge-unit', ' ' + m.unit));
+        head.appendChild(val);
+        var track = make('div', 'track');
+        var fill = make('div', 'fill lvl-' + (has ? levelFor(m, raw) : 'normal'));
+        var pct = has ? Math.max(0, Math.min(100, (raw - m.min) / (m.max - m.min) * 100)) : 0;
+        fill.style.width = pct + '%';
+        track.appendChild(fill);
+        row.appendChild(head);
+        row.appendChild(track);
+        wrap.appendChild(row);
+      });
+    }
+
+    function renderCodes(codes) {
+      var ul = $('codes');
+      ul.replaceChildren();
+      $('codes-empty').hidden = codes.length > 0;
+      codes.forEach(function (c) {
+        var li = make('li');
+        li.appendChild(make('span', 'code-id', c.code));
+        li.appendChild(make('span', 'code-desc', c.description || ''));
+        ul.appendChild(li);
+      });
+    }
+
+    function renderOther(v) {
+      var dl = $('other');
+      dl.replaceChildren();
+      var known = {};
+      METRICS.forEach(function (m) { known[m.key] = true; });
+      var n = 0;
+      Object.keys(v).forEach(function (k) {
+        if (known[k] || k === 'timestamp') return;
+        var val = v[k];
+        if (val !== null && typeof val === 'object') return;
+        n++;
+        dl.appendChild(make('dt', null, pretty(k)));
+        dl.appendChild(make('dd', null, formatNumber(val)));
+      });
+      $('other-wrap').hidden = n === 0;
+    }
+
+    function renderStatus(d) {
+      renderBanner(d.safety_report || {});
+      renderGauges(d.vehicle_data || {});
+      renderCodes(d.dtc_codes || []);
+      renderOther(d.vehicle_data || {});
+    }
+
+    async function loadStatus() {
+      try {
+        var r = await fetch('/api/vehicle-status');
+        var d = await r.json();
+        if (!d.success) throw new Error(d.error || 'The server returned an error');
+        renderStatus(d);
+        $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      } catch (e) {
+        $('updated').textContent = 'Could not load readings: ' + e.message;
+      }
+    }
+
+    function setBadge(id, text, kind) {
+      var b = $(id);
+      b.textContent = text;
+      b.className = 'badge badge-' + kind;
+    }
+
+    async function loadHealth() {
+      try {
+        var r = await fetch('/api/health');
+        var h = await r.json();
+        setBadge('badge-obd', 'Vehicle data: ' + (h.obd_mode === 'mock' ? 'simulated' : 'live'),
+                 h.obd_mode === 'mock' ? 'info' : 'ok');
+        setBadge('badge-llm', h.llm_available ? 'AI answers: on' : 'AI answers: off (no API key)',
+                 h.llm_available ? 'ok' : 'warn');
+        setBadge('badge-kb', h.knowledge_base_loaded ? 'Knowledge base: loaded' : 'Knowledge base: missing',
+                 h.knowledge_base_loaded ? 'ok' : 'warn');
+      } catch (e) {
+        setBadge('badge-obd', 'Server not reachable', 'warn');
+      }
+    }
+
+    /* ---------- Chat ---------- */
+    function scrollDown() {
+      var m = $('messages');
+      m.scrollTop = m.scrollHeight;
+    }
+
+    function addMessage(role, text) {
+      var m = make('div', 'msg msg-' + role);
+      m.appendChild(make('p', null, text));
+      $('messages').appendChild(m);
+      scrollDown();
+      return m;
+    }
+
+    function addAnswer(d) {
+      var ex = d.explanation || {};
+      var fallbackSev = d.safety_report ? d.safety_report.severity : null;
+      var key = sevKey(ex.severity || fallbackSev);
+      var m = make('div', 'msg msg-bot answer sev-' + key);
+
+      var top = make('div', 'answer-top');
+      top.appendChild(make('span', 'pill', SEV_TEXT[key]));
+      if (ex.estimated_urgency) top.appendChild(make('span', 'urgency', textOf(ex.estimated_urgency)));
+      m.appendChild(top);
+
+      m.appendChild(make('p', 'explanation', textOf(ex.explanation)));
+
+      if (Array.isArray(ex.checklist) && ex.checklist.length) {
+        m.appendChild(make('h3', null, 'What to check'));
+        var ol = make('ol');
+        ex.checklist.forEach(function (i) { ol.appendChild(make('li', null, textOf(i))); });
+        m.appendChild(ol);
+      }
+
+      if (Array.isArray(d.retrieved_sources) && d.retrieved_sources.length) {
+        m.appendChild(make('h3', null, 'Sources used'));
+        var ul = make('ul', 'sources');
+        d.retrieved_sources.forEach(function (s) {
+          var li = make('li');
+          li.appendChild(make('span', 'src-name', textOf(s.source)));
+          li.appendChild(make('span', 'src-score', percent(s.relevance)));
+          ul.appendChild(li);
+        });
+        m.appendChild(ul);
+      }
+
+      if (ex.confidence) m.appendChild(make('p', 'confidence', 'Confidence: ' + textOf(ex.confidence)));
+
+      $('messages').appendChild(m);
+      scrollDown();
+    }
+
+    var busy = false;
+
+    async function ask(question) {
+      if (busy) return;
+      busy = true;
+      $('send-btn').disabled = true;
+      addMessage('user', question);
+      var pending = addMessage('bot pending', 'Checking the readings and searching the knowledge base...');
+      try {
+        var r = await fetch('/api/diagnose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: question })
+        });
+        var d = await r.json();
+        pending.remove();
+        if (!d.success) throw new Error(d.error || 'The server returned an error');
+        addAnswer(d);
+        renderStatus(d);
+        $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+      } catch (e) {
+        pending.remove();
+        addMessage('error', 'The question could not be answered: ' + e.message +
+          '. Check that the server is running, then try again.');
+      } finally {
+        busy = false;
+        $('send-btn').disabled = false;
+        $('query').focus();
+      }
+    }
+
+    $('composer').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      var q = $('query').value.trim();
+      if (!q) return;
+      $('query').value = '';
+      ask(q);
+    });
+
+    Array.prototype.forEach.call(document.querySelectorAll('.chip'), function (c) {
+      c.addEventListener('click', function () { ask(c.textContent); });
+    });
+
+    $('refresh-btn').addEventListener('click', loadStatus);
+
+    addMessage('bot', 'Ask about the current readings or any fault code. Answers use the live data and the documents in your knowledge base.');
+    loadHealth();
+    loadStatus();
+    setInterval(function () { if (!document.hidden) loadStatus(); }, 5000);
+  })();
+  </script>
+</body>
+</html>
